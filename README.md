@@ -36,6 +36,18 @@ That's it. One command. / 이게 끝입니다. 명령어 하나.
 
 *Prompt: "Elegant minimalist product photography: a single white ceramic coffee cup on dark marble surface, steam rising softly, dramatic side lighting"* · `1024x1024` · `high` quality
 
+### Fantasy World / 판타지 세계관
+
+![Fantasy Castle](examples/fantasy-castle.png)
+
+*Prompt: "An epic fantasy landscape: a massive floating castle in the sky connected by glowing golden chains to mountain peaks below, waterfalls cascading from the floating island, dragon silhouettes circling the towers, bioluminescent flora, magical aurora in the twilight sky"* · `1536x1024` · `high` quality
+
+### Coastal City Night / 해안가 도시 야경
+
+![Coastal Night](examples/coastal-night.png)
+
+*Prompt: "A breathtaking coastal Mediterranean city at night, white-washed buildings cascading down hillside to a crescent harbor, thousands of warm golden lights reflecting on calm dark blue water, luxury yachts, crescent moon, long exposure photography style"* · `1536x1024` · `high` quality
+
 ### Concept Art / 컨셉 아트
 
 ![Mars Poster](examples/mars-poster.png)
@@ -290,6 +302,8 @@ codex-image/
 ├── .gitignore
 └── examples/         # Generated sample images / 생성 예시 이미지
     ├── product-coffee.png       (1024x1024, high)
+    ├── fantasy-castle.png       (1536x1024, high)
+    ├── coastal-night.png        (1536x1024, high)
     └── mars-poster.png          (1024x1536, high)
 ```
 
