@@ -1,0 +1,10 @@
+# Generated images (test outputs)
+codex-image-*.png
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
