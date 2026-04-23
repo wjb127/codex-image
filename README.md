@@ -8,9 +8,9 @@
 [![Claude Code](https://img.shields.io/badge/Claude_Code-skill-blueviolet)](https://docs.anthropic.com/en/docs/claude-code)
 [![gpt-image-2](https://img.shields.io/badge/model-gpt--image--2-green)](https://platform.openai.com)
 
-![Seoul at Golden Hour](examples/seoul-golden-hour.png)
+![Mars Poster](examples/mars-poster.png)
 
-*Prompt: "A cinematic aerial photograph of Seoul at golden hour, Lotte World Tower and Han River in frame"* · `1536x1024` · `high` quality
+*Prompt: "A lone astronaut standing on the edge of a crater on Mars, looking at Earth rising on the horizon, cinematic composition"* · `1024x1536` · `high` quality
 
 ---
 
@@ -29,12 +29,6 @@ That's it. One command. / 이게 끝입니다. 명령어 하나.
 ---
 
 ## Gallery / 갤러리
-
-### Photorealistic / 포토리얼리스틱
-
-![Hanok Spring](examples/hanok-spring.png)
-
-*Prompt: "A traditional Korean hanok courtyard in full cherry blossom bloom, spring afternoon, warm golden sunlight filtering through pink petals, detailed giwa tile roof"* · `1024x1536` · `high` quality
 
 ### Product Photography / 제품 사진
 
@@ -295,8 +289,6 @@ codex-image/
 ├── LICENSE           # MIT License
 ├── .gitignore
 └── examples/         # Generated sample images / 생성 예시 이미지
-    ├── seoul-golden-hour.png    (1536x1024, high)
-    ├── hanok-spring.png         (1024x1536, high)
     ├── product-coffee.png       (1024x1024, high)
     └── mars-poster.png          (1024x1536, high)
 ```
