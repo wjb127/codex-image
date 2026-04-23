@@ -1,5 +1,8 @@
-# Generated images (test outputs)
-codex-image-*.png
+# Generated images in project root (test outputs)
+/codex-image-*.png
+
+# Keep examples/ tracked
+!examples/
 
 # OS
 .DS_Store
