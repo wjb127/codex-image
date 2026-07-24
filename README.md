@@ -8,6 +8,15 @@
 [![Claude Code](https://img.shields.io/badge/Claude_Code-skill-blueviolet)](https://docs.anthropic.com/en/docs/claude-code)
 [![gpt-image-2](https://img.shields.io/badge/model-gpt--image--2-green)](https://platform.openai.com)
 
+**Install in one line:**
+
+```
+/plugin marketplace add wjb127/claude-skills
+/plugin install codex-image@wjb127-skills
+```
+
+Part of [**claude-skills**](https://github.com/wjb127/claude-skills) — 7 Claude Code skills built while shipping real client websites.
+
 ![Mars Poster](examples/mars-poster.png)
 
 *Prompt: "A lone astronaut standing on the edge of a crater on Mars, looking at Earth rising on the horizon, cinematic composition"* · `1024x1536` · `high` quality
