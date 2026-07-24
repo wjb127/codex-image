@@ -17,6 +17,10 @@
 
 Part of [**claude-skills**](https://github.com/wjb127/claude-skills) — 7 Claude Code skills built while shipping real client websites.
 
+![codex-image demo](demo/codex-image-demo.gif)
+
+*One slash command, no API key. Real session — playback sped up.*
+
 ![Mars Poster](examples/mars-poster.png)
 
 *Prompt: "A lone astronaut standing on the edge of a crater on Mars, looking at Earth rising on the horizon, cinematic composition"* · `1024x1536` · `high` quality
