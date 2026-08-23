@@ -1,8 +1,8 @@
 # codex-image
 
-**Claude Code skill that generates images through Codex CLI — powered by OAuth, no API key needed.**
+**Claude Code skill that generates images through Codex CLI by default, with an optional Atlas Cloud provider.**
 
-**Codex CLI를 통한 AI 이미지 생성 Claude Code 스킬 — OAuth 인증, API 키 불필요.**
+**기본값은 Codex OAuth이며, 선택적으로 Atlas Cloud API를 사용할 수 있는 Claude Code 이미지 생성 스킬.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-skill-blueviolet)](https://docs.anthropic.com/en/docs/claude-code)
@@ -38,6 +38,14 @@ Most image generation tools require you to manage API keys, install Python SDKs,
 ```
 
 That's it. One command. / 이게 끝입니다. 명령어 하나.
+
+Need an API-based path instead? Atlas Cloud is opt-in and does not change the
+default OAuth flow. It validates the selected model against the live catalog
+and schema, shows the current price before submission, submits each requested
+image once, and polls only the result endpoint with bounded backoff.
+
+API 기반 경로가 필요하면 Atlas Cloud를 명시적으로 선택할 수 있습니다. 기본 OAuth
+동작은 유지되며, 실행 전 실시간 모델/스키마와 가격을 확인합니다.
 
 ---
 
@@ -106,8 +114,9 @@ codex login (one-time / 최초 1회)
 | Requirement | Command | Note |
 |-------------|---------|------|
 | **Claude Code** | [Install guide](https://docs.anthropic.com/en/docs/claude-code) | The host environment / 호스트 환경 |
-| **Codex CLI** | `npm install -g @openai/codex` | Image generation engine / 이미지 생성 엔진 |
-| **Codex Login** | `codex login` | One-time OAuth via ChatGPT / ChatGPT로 최초 1회 OAuth |
+| **Codex CLI** | `npm install -g @openai/codex` | Default provider only / 기본 provider 전용 |
+| **Codex Login** | `codex login` | Default provider only; one-time OAuth via ChatGPT |
+| **Atlas Cloud (optional)** | `export ATLASCLOUD_API_KEY=...` | Only for `--provider atlas`; never stored by the skill |
 
 ```bash
 # Verify everything is ready / 설치 확인
@@ -145,6 +154,15 @@ After installation, the `/codex-image` command is immediately available in Claud
 /codex-image a red apple on white background
 ```
 
+### Optional Atlas Cloud provider / 선택적 Atlas Cloud provider
+
+```bash
+/codex-image --provider atlas --size 1024x1536 futuristic seoul skyline at sunset
+```
+
+The skill first performs a read-only plan and asks for confirmation after
+showing the live model schema and price. No paid POST is sent before approval.
+
 ### With options / 옵션 포함
 
 ```bash
@@ -165,6 +183,8 @@ After installation, the `/codex-image` command is immediately available in Claud
 
 | Flag | Values | Default | Description |
 |------|--------|---------|-------------|
+| `--provider` | `codex` · `atlas` | `codex` | Generation provider / 생성 provider |
+| `--model` | live Atlas model ID | `openai/gpt-image-2/text-to-image` | Atlas only / Atlas 전용 |
 | `--size` | `1024x1024` · `1024x1536` · `1536x1024` · `auto` | `1024x1024` | Image dimensions / 이미지 크기 |
 | `--quality` | `low` · `medium` · `high` · `auto` | `auto` | Generation quality / 생성 품질 |
 | `--out` | directory path | project root | Save location / 저장 위치 |
@@ -290,18 +310,21 @@ Image generation costs are charged to your OpenAI account (via ChatGPT Plus/Team
 | `1024x1024` | `high` | ~$0.04 |
 | `1024x1536` | `high` | ~$0.06 |
 
-Refer to [OpenAI pricing](https://openai.com/api/pricing/) for current `gpt-image-2` rates.
+Refer to [OpenAI pricing](https://openai.com/api/pricing/) for the default OAuth
+path. The Atlas helper reads its current per-image price from the live model
+catalog during the mandatory dry run; the README intentionally does not pin it.
 
 ---
 
 ## Security / 보안
 
-- **No API keys stored or transmitted** — OAuth only
+- **Codex remains OAuth-only by default** — no API key is needed
+- **Atlas is explicit opt-in** — `ATLASCLOUD_API_KEY` is read from the environment and never stored or logged
 - **No telemetry** — no analytics, no error reporting, no tracking
-- **Images stay local** — saved to your project directory, never uploaded anywhere
-- **Single external connection** — `api.openai.com` via Codex CLI only
+- **Controlled outputs** — generated images are downloaded only to the selected project path; this text-to-image path does not upload local files
+- **Provider isolation** — Codex credentials are never sent to Atlas, and Atlas credentials are never sent to OpenAI
 
-API 키 저장/전송 없음. 텔레메트리 없음. 이미지는 로컬에만 저장. 외부 연결은 Codex CLI를 통한 `api.openai.com` 하나뿐.
+기본 Codex 경로는 API 키가 필요 없습니다. Atlas 경로의 키는 인증 헤더로만 전송되며 저장되거나 로그에 기록되지 않습니다.
 
 ---
 
@@ -310,6 +333,10 @@ API 키 저장/전송 없음. 텔레메트리 없음. 이미지는 로컬에만 
 ```
 codex-image/
 ├── SKILL.md          # Claude Code skill definition / 스킬 정의
+├── scripts/
+│   └── atlas_image.py # Optional Atlas catalog/schema/submit/poll helper
+├── tests/
+│   └── test_atlas_image.py
 ├── README.md         # Documentation / 문서
 ├── LICENSE           # MIT License
 ├── .gitignore

@@ -1,20 +1,20 @@
 ---
 name: codex-image
 description: |
-  Generate images via Codex CLI's built-in image_gen tool (gpt-image-2). OAuth auth — no API key needed.
-  Codex CLI의 내장 image_gen 도구로 이미지 생성. OAuth 인증으로 API 키 불필요.
-  Usage: /codex-image cherry blossom hanok, /codex-image --size 1024x1536 space cat, /codex-image --quality high seoul night
-argument-hint: "[--size <WxH>] [--quality low|medium|high] [--out <path>] [-n <count>] <image prompt>"
+  Generate images through Codex OAuth by default, or use Atlas Cloud as an explicit API-key provider.
+  기본값은 Codex OAuth이며, 명시적으로 선택하면 Atlas Cloud API도 사용할 수 있다.
+  Usage: /codex-image cherry blossom hanok, /codex-image --provider atlas --size 1024x1536 space cat
+argument-hint: "[--provider codex|atlas] [--model <atlas-model>] [--size <WxH>] [--quality low|medium|high] [--out <path>] [-n <count>] <image prompt>"
 allowed-tools:
   - Bash
   - Read
   - AskUserQuestion
 ---
 
-# codex-image — AI Image Generation via Codex OAuth
+# codex-image — AI Image Generation via Codex OAuth or Atlas Cloud
 
-Generate images using OpenAI's `gpt-image-2` model through Codex CLI.
-**No API key required** — uses Codex OAuth (ChatGPT login) authentication.
+Generate images using OpenAI's `gpt-image-2` model through Codex CLI by default.
+The optional Atlas Cloud path uses its asynchronous API and requires an API key.
 
 OpenAI Codex CLI의 내장 `image_gen` 도구를 통해 `gpt-image-2` 모델로 이미지를 생성한다.
 **API 키 불필요** — Codex OAuth(ChatGPT 로그인) 인증 사용.
@@ -37,7 +37,29 @@ User prompt → Claude Code (/codex-image)
 
 ---
 
-## Step 1 — Verify Codex CLI & Auth / Codex CLI 및 인증 확인
+## Step 1 — Select Provider / Provider 선택
+
+Use `codex` unless the user explicitly passes `--provider atlas`.
+
+| Provider | Authentication | Behavior |
+|----------|----------------|----------|
+| `codex` (default) | Codex OAuth | Existing `codex exec` + `image_gen` flow |
+| `atlas` | `ATLASCLOUD_API_KEY` | Live catalog/schema validation, one submit per requested image, bounded result polling |
+
+For `atlas`, resolve the bundled script before continuing:
+
+```bash
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ]; then
+  _ATLAS_SCRIPT="${CLAUDE_PLUGIN_ROOT}/scripts/atlas_image.py"
+elif [ -f ".claude/skills/codex-image/scripts/atlas_image.py" ]; then
+  _ATLAS_SCRIPT=".claude/skills/codex-image/scripts/atlas_image.py"
+else
+  _ATLAS_SCRIPT="${HOME}/.claude/skills/codex-image/scripts/atlas_image.py"
+fi
+test -f "${_ATLAS_SCRIPT}" || { echo "Atlas helper not found"; exit 1; }
+```
+
+For the default `codex` provider, verify Codex CLI and OAuth:
 
 ```bash
 which codex 2>/dev/null && codex --version 2>/dev/null || echo "NOT_FOUND"
@@ -61,6 +83,8 @@ Extract from `$ARGUMENTS`:
 
 | Flag | Values | Default | Description |
 |------|--------|---------|-------------|
+| `--provider` | `codex`, `atlas` | `codex` | Generation provider / 생성 provider |
+| `--model` | live Atlas model ID | `openai/gpt-image-2/text-to-image` | Atlas only; must be present in the live catalog |
 | `--size` | `1024x1024`, `1024x1536`, `1536x1024`, `auto` | `1024x1024` | Image dimensions / 이미지 크기 |
 | `--quality` | `low`, `medium`, `high`, `auto` | `auto` | Generation quality / 생성 품질 |
 | `--out` | directory path | project root | Save location / 저장 위치 |
@@ -87,6 +111,8 @@ _FILENAME="codex-image-${_TIMESTAMP}"
 - Never overwrite existing files / 기존 파일 덮어쓰기 금지
 
 ## Step 4 — Generate Image / 이미지 생성
+
+### Codex OAuth (default)
 
 ```bash
 codex exec "Perform the following tasks:
@@ -118,6 +144,41 @@ timeout: 120000ms (2 min)
 3. Codex copies file to specified project path
 4. Reports file path and size
 
+### Atlas Cloud (explicit opt-in)
+
+Run a read-only plan first. It fetches the live model catalog and that model's
+schema, validates every request field, and prints the current unit and total
+price. It does not submit a generation task.
+
+```bash
+python3 "${_ATLAS_SCRIPT}" \
+  --prompt "${_PROMPT}" \
+  --model "${_MODEL:-openai/gpt-image-2/text-to-image}" \
+  --size "${_SIZE}" \
+  --quality "${_QUALITY}" \
+  --out "${_OUT_DIR}" \
+  --count "${_N}" \
+  --dry-run
+```
+
+Show the plan and price to the user. Only after explicit confirmation, rerun
+the same command without `--dry-run` and with `--yes`:
+
+```bash
+test -n "${ATLASCLOUD_API_KEY:-}" || { echo "ATLASCLOUD_API_KEY is not set"; exit 1; }
+python3 "${_ATLAS_SCRIPT}" \
+  --prompt "${_PROMPT}" \
+  --model "${_MODEL:-openai/gpt-image-2/text-to-image}" \
+  --size "${_SIZE}" \
+  --quality "${_QUALITY}" \
+  --out "${_OUT_DIR}" \
+  --count "${_N}" \
+  --yes
+```
+
+The helper never retries a generation POST. It retries only result GETs with
+bounded exponential backoff and saves timestamped files without overwriting.
+
 ## Step 5 — Display Result / 결과 출력
 
 ```
@@ -128,7 +189,7 @@ Prompt: <prompt used>
 Size: <size>
 Quality: <quality>
 Count: <n>
-Auth: OAuth (ChatGPT)
+Auth: OAuth (ChatGPT) or Atlas Cloud API key
 ───────────────────────────────────────────────
 <saved file path(s)>
 ═══════════════════════════════════════════════
@@ -151,10 +212,14 @@ Auth: OAuth (ChatGPT)
 | Timeout (>2min) | "Generation timed out. Try `--quality low`." / "생성 시간 초과. `--quality low`로 재시도." |
 | Rate limit | "API rate limited. Wait and retry." / "API 호출 제한. 잠시 후 재시도." |
 | Trust error | Check `--skip-git-repo-check` flag or add project to `~/.codex/config.toml` |
+| Atlas schema rejection | Choose only values printed by the live schema plan; do not guess or bypass validation |
+| Atlas task still pending | Report the prediction ID; do not submit the POST again |
 
 ## Rules / 규칙
 
 - Always use the Read tool to display generated images / 생성된 이미지는 반드시 Read로 표시
 - Never overwrite existing files — always use timestamped filenames / 기존 파일 덮어쓰기 금지
-- OAuth only — do not attempt direct REST API calls with OAuth token (returns 401) / OAuth 토큰으로 REST API 직접 호출 금지
+- Keep Codex OAuth as the default; use Atlas only when explicitly selected
+- Never send a Codex OAuth token to Atlas or an Atlas API key to OpenAI
+- Never retry an Atlas generation POST; only result GET polling may retry
 - Verify prompt intent before generating / 생성 전 프롬프트 의도 확인
